@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.env
+
+# Conda / venv
+envs/
+.conda/
+
+# Data — uploads and raw processed outputs (don't commit participant data)
+data/uploads/
+data/processed/
+data/experiment_responses.csv
+data/order_counts.json
+
+# Figures generated at runtime
+figures/
+analysis/
+
+# Word docs (binary, large)
+*.docx
+~$*.docx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# PyTorch model cache (downloaded automatically at runtime)
+~/.cache/torch/
+
+# Claude Code internal files
+.claude/
+
+# Runtime-generated audio (processed outputs served to browser)
+static/audio/processed/
+
+# Flask server logs
+flask_out.log
+flask_err.log
+flask_server.log
+flask_server_err.log

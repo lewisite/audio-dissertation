@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Welcome — Audio Codec Study{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-xl-7">
+
+    <!-- Hero card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body p-4 p-md-5">
+        <h1 class="h3 fw-bold mb-1">The Effect of Explainability on Trust<br>
+          <small class="text-muted fs-5 fw-normal">in Neural Audio Processing Systems</small>
+        </h1>
+        <hr class="my-3">
+
+        <h5 class="fw-semibold mb-2">What is this study about?</h5>
+        <p class="mb-3">
+          You will listen to short audio clips processed by different AI compression
+          systems, then answer questions about how much you trust each system.
+          The whole study takes about <strong>15–20 minutes</strong>.
+        </p>
+
+        <!-- 4-step how it works -->
+        <h5 class="fw-semibold mb-2">How it works — 4 sessions</h5>
+        <div class="border rounded p-3 mb-3">
+          <div class="how-step">
+            <div class="how-step-num">1</div>
+            <div class="how-step-body">
+              <strong>Pick an audio clip</strong>
+              <span>Choose a famous recording or upload your own file.</span>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">2</div>
+            <div class="how-step-body">
+              <strong>The system compresses it</strong>
+              <span>An AI shrinks the audio to a tiny fraction of its original size, then rebuilds it.
+              Some systems will explain what they did; others won't.</span>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">3</div>
+            <div class="how-step-body">
+              <strong>Listen &amp; compare</strong>
+              <span>Play the original and processed clips side-by-side to hear the difference.</span>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">4</div>
+            <div class="how-step-body">
+              <strong>Rate trust &amp; quality</strong>
+              <span>Answer 12 short questions about how much you trust the system,
+              then give the audio a quality rating. Repeat for 4 different systems.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Headphone reminder — prominent -->
+        <div class="alert alert-warning d-flex align-items-start gap-3 mb-3 py-3" role="alert">
+          <i class="bi bi-headphones fs-4 mt-1 flex-shrink-0"></i>
+          <div>
+            <strong>Headphones required</strong><br>
+            <span class="small">
+              This study involves subtle differences in sound quality that are very
+              difficult to hear on laptop speakers. Please put on headphones or
+              earphones before you start. A quiet environment also helps.
+            </span>
+          </div>
+        </div>
+
+        <!-- Consent -->
+        <div class="alert alert-light border mt-4 mb-3">
+          <h6 class="fw-semibold mb-2">
+            <i class="bi bi-shield-check text-accent me-1"></i> Informed Consent
+          </h6>
+          <p class="mb-2 small">
+            Your participation is entirely voluntary. All data are collected anonymously;
+            no personally identifiable information is stored. You may withdraw at any time
+            by closing your browser. The anonymised data will be used solely for academic
+            research purposes.
+          </p>
+          <p class="mb-2 small">
+            <strong>Audio recordings:</strong> if you choose to upload your own audio,
+            it is used solely to demonstrate the compression system during your session.
+            It is deleted from the server immediately after processing and is not stored,
+            retained, or accessible beyond that point. The provided sample recordings
+            are pre-processed and contain no personal data.
+          </p>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="consent_check">
+            <label class="form-check-label small" for="consent_check">
+              I have read the above information and <strong>I consent to participate</strong>
+              in this study.
+            </label>
+          </div>
+        </div>
+
+        <form method="post" action="{{ url_for('start') }}">
+          <button type="submit" class="btn btn-accent btn-lg w-100" id="start_btn" disabled>
+            <i class="bi bi-play-circle me-2"></i>Start Study
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('consent_check').addEventListener('change', function() {
+    document.getElementById('start_btn').disabled = !this.checked;
+  });
+</script>
+{% endblock %}

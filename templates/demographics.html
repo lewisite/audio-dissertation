@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Background Information{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7 col-xl-6">
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4 p-md-5">
+
+        <h2 class="h4 fw-bold mb-1">Background Information</h2>
+        <p class="text-muted mb-4">
+          Please answer the following short questions. All responses are anonymous.
+        </p>
+
+        <form method="post" action="{{ url_for('demographics') }}">
+
+          <!-- Age -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="age">Age range</label>
+            <select class="form-select" id="age" name="age" required>
+              <option value="" disabled selected>Select your age range…</option>
+              <option value="18-24">18–24</option>
+              <option value="25-34">25–34</option>
+              <option value="35-44">35–44</option>
+              <option value="45-54">45–54</option>
+              <option value="55+">55 or older</option>
+              <option value="prefer_not">Prefer not to say</option>
+            </select>
+          </div>
+
+          <!-- Gender -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="gender">Gender (optional)</label>
+            <select class="form-select" id="gender" name="gender">
+              <option value="" selected>Prefer not to say</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="non-binary">Non-binary / third gender</option>
+              <option value="other">Another identity</option>
+            </select>
+          </div>
+
+          <!-- Audio background -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Musical / audio background
+            </label>
+            <div class="d-flex flex-column gap-1">
+              {% for val, lbl in [
+                  ('none',         'No formal training'),
+                  ('hobbyist',     'Hobbyist (self-taught, casual listening)'),
+                  ('amateur',      'Amateur musician or audio enthusiast'),
+                  ('professional', 'Professional musician / audio engineer')
+              ] %}
+              <div class="form-check">
+                <input class="form-check-input" type="radio"
+                       name="audio_background" id="bg_{{ val }}" value="{{ val }}" required>
+                <label class="form-check-label" for="bg_{{ val }}">{{ lbl }}</label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Headphones -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-headphones me-1 text-accent"></i>
+              Are you using headphones for this session?
+            </label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio"
+                       name="headphones" id="hp_yes" value="yes" required>
+                <label class="form-check-label" for="hp_yes">Yes</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio"
+                       name="headphones" id="hp_no" value="no">
+                <label class="form-check-label" for="hp_no">
+                  No (speakers / built-in)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hearing -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">
+              Do you have any known hearing impairment?
+            </label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio"
+                       name="hearing_impairment" id="hi_no" value="no" required>
+                <label class="form-check-label" for="hi_no">No</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio"
+                       name="hearing_impairment" id="hi_yes" value="yes">
+                <label class="form-check-label" for="hi_yes">Yes</label>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-accent btn-lg w-100">
+            Continue <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

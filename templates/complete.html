@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Study Complete — Thank You{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7 col-xl-6">
+
+    <div class="card shadow-sm border-0 text-center">
+      <div class="card-body p-5">
+
+        <!-- Success icon -->
+        <div class="mb-4">
+          <div class="success-circle mx-auto mb-3">
+            <i class="bi bi-check-lg"></i>
+          </div>
+          <h2 class="fw-bold">Thank You!</h2>
+          <p class="text-muted">
+            You have successfully completed all {{ 4 }} sessions of the study.
+          </p>
+        </div>
+
+        <!-- Completion code -->
+        <div class="alert alert-light border mb-4">
+          <p class="mb-1 text-muted small">Your unique completion code:</p>
+          <div class="completion-code" id="completion-code">{{ completion_code }}</div>
+          <p class="mt-2 mb-0 text-muted small">
+            Please copy this code and submit it to receive your study credit
+            (if applicable).
+          </p>
+        </div>
+
+        <!-- Copy button -->
+        <button class="btn btn-outline-secondary mb-4" onclick="copyCode()">
+          <i class="bi bi-clipboard me-1"></i> Copy Code
+        </button>
+
+        <!-- Brief debrief -->
+        <div class="text-start border rounded p-3 mb-4 bg-light">
+          <h6 class="fw-semibold">Study Debrief</h6>
+          <p class="small mb-2">
+            This study investigates whether making the inner workings of a neural
+            audio codec <em>visible and explainable</em> affects how much users
+            trust the system. You experienced two types of systems:
+          </p>
+          <ul class="small mb-2">
+            <li><strong>System Alpha</strong> — showed you detailed information
+                about how it compressed your audio (waveforms, spectrograms,
+                quality metrics, and a plain-language summary).</li>
+            <li><strong>System Beta</strong> — processed the audio silently,
+                without providing any additional information.</li>
+          </ul>
+          <p class="small mb-0">
+            Both systems used the same underlying neural compression technology
+            (Meta's EnCodec). Any differences in your trust ratings reflect the
+            effect of <em>explainability</em>, not differences in audio quality.
+          </p>
+        </div>
+
+        <p class="text-muted small">
+          If you have any questions, please contact the researcher via
+          your study platform.
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copyCode() {
+    const code = document.getElementById('completion-code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = event.target.closest('button');
+      btn.innerHTML = '<i class="bi bi-check me-1"></i> Copied!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy Code';
+      }, 2000);
+    });
+  }
+</script>
+{% endblock %}
