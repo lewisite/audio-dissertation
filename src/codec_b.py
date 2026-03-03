@@ -30,9 +30,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from pipeline import (
     load_audio, save_audio, encode_audio, decode_audio,
     compute_waveform_metrics, compute_spectral_metrics, compute_perceptual_metrics,
-    analyze_tokens, postprocess_audio,
+    analyze_tokens, postprocess_audio, _get_model,
 )
-from encodec import EncodecModel
 
 
 def run_codec_b(input_path: str, bandwidth: float = 24.0,
@@ -53,11 +52,8 @@ def run_codec_b(input_path: str, bandwidth: float = 24.0,
     audio_np, src_sr = load_audio(input_path)
     duration = audio_np.shape[-1] / src_sr
 
-    # ── Encode ───────────────────────────────────────────────────────────────
-    model = EncodecModel.encodec_model_48khz()
-    model.set_target_bandwidth(bandwidth)
-    model.eval()
-    model.segment = None   # full-clip pass — no chunk-boundary artefacts
+    # ── Encode (model cached after first call) ────────────────────────────────
+    model = _get_model(bandwidth)
 
     t0 = time.perf_counter()
     frames, wav_tensor, codes_np = encode_audio(model, audio_np, src_sr)

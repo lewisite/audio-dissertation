@@ -218,11 +218,18 @@ def _process_job(job_id: str, audio_path: str, condition: dict):
 
         t0 = time.perf_counter()
 
-        # ── Fast path disabled: always run live pipeline ──────────────────────
-        # precomp = _check_precomputed(clip_stem, codec, latency_ms)
-        # if precomp is not None:
-        #     ...
-        #     return
+        # ── Fast path: serve pre-computed results if available ───────────────
+        precomp = _check_precomputed(clip_stem, codec, latency_ms)
+        if precomp is not None:
+            # Simulate target latency so the UI feels consistent
+            elapsed_ms = (time.perf_counter() - t0) * 1000
+            if elapsed_ms < latency_ms:
+                time.sleep((latency_ms - elapsed_ms) / 1000)
+            precomp['processing_time_ms'] = round((time.perf_counter() - t0) * 1000, 1)
+            precomp['status'] = 'complete'
+            with _jobs_lock:
+                _jobs[job_id] = precomp
+            return
 
         input_ext = Path(audio_path).suffix.lower().lstrip('.')
         try:
@@ -358,15 +365,12 @@ def _get_samples():
             'name': stem.replace('_', ' ').title(),
             'url':  f'/static/audio/samples/{f.name}',
         })
-    # If no samples prepared, copy test.wav as the default sample
+    # If no samples prepared, fall back to the bundled sample
     if not samples:
-        test_wav = os.path.join(BASE_DIR, 'test.wav')
-        if os.path.exists(test_wav):
-            dst = os.path.join(SAMPLES_DIR, 'test_audio.wav')
-            if not os.path.exists(dst):
-                shutil.copy2(test_wav, dst)
-            samples.append({'id': 'test_audio', 'name': 'Test Audio',
-                             'url': '/static/audio/samples/test_audio.wav'})
+        fallback = os.path.join(SAMPLES_DIR, 'now_stand_aside.wav')
+        if os.path.exists(fallback):
+            samples.append({'id': 'now_stand_aside', 'name': 'Now Stand Aside',
+                             'url': '/static/audio/samples/now_stand_aside.wav'})
     return samples
 
 def _allowed(filename):
@@ -456,11 +460,23 @@ def api_process():
         audio_path = os.path.join(UPLOAD_FOLDER,
                                   f"{session['participant_id']}_{filename}")
         f.save(audio_path)
+        # Truncate uploaded files to 2 minutes to keep processing time reasonable
+        upload_warning = None
+        try:
+            import soundfile as sf
+            info = sf.info(audio_path)
+            if info.duration > 120:
+                data, sr = sf.read(audio_path)
+                max_samples = int(120 * sr)
+                sf.write(audio_path, data[:max_samples], sr)
+                upload_warning = f'Your clip was {info.duration:.0f}s — we trimmed it to the first 2 minutes.'
+        except Exception:
+            pass
     else:
         audio_path = os.path.join(SAMPLES_DIR, f'{sample_id}.wav')
         if not os.path.exists(audio_path):
-            # Try the generic test audio
-            audio_path = os.path.join(SAMPLES_DIR, 'test_audio.wav')
+            # Fall back to bundled sample
+            audio_path = os.path.join(SAMPLES_DIR, 'now_stand_aside.wav')
         if not os.path.exists(audio_path):
             return jsonify({'error': 'Sample file not found. Run prepare_samples.py first.'}), 404
 
@@ -474,7 +490,10 @@ def api_process():
     t.start()
 
     session['last_clip_id'] = Path(audio_path).stem
-    return jsonify({'job_id': job_id})
+    resp = {'job_id': job_id}
+    if source == 'upload' and upload_warning:
+        resp['warning'] = upload_warning
+    return jsonify(resp)
 
 
 @app.route('/api/status/<job_id>')

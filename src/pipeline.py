@@ -38,6 +38,21 @@ from scipy.signal import stft
 from encodec import EncodecModel
 from encodec.utils import convert_audio
 
+# ── Cached model singleton (avoids reloading ~500 MB per request) ────────────
+_cached_model = None
+_cached_bw    = None
+
+def _get_model(bandwidth: float):
+    """Return a cached EnCodec 48 kHz model, reloading only if bandwidth changes."""
+    global _cached_model, _cached_bw
+    if _cached_model is None or _cached_bw != bandwidth:
+        _cached_model = EncodecModel.encodec_model_48khz()
+        _cached_model.set_target_bandwidth(bandwidth)
+        _cached_model.eval()
+        _cached_model.segment = None
+        _cached_bw = bandwidth
+    return _cached_model
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # I/O HELPERS
@@ -1207,14 +1222,9 @@ def run_pipeline(input_path: str, bandwidth: float = 24.0,
     for reason in input_analysis['difficulty_reasons']:
         print(f"       • {reason}")
 
-    # ── 2. Load EnCodec model ────────────────────────────────────────────────
+    # ── 2. Load EnCodec model (cached after first call) ───────────────────────
     print("[2/7] Loading EnCodec 48 kHz model...")
-    model = EncodecModel.encodec_model_48khz()
-    model.set_target_bandwidth(bandwidth)
-    model.eval()
-    # Process the full clip as a single pass — eliminates chunk-boundary artefacts
-    # that can appear when long audio is split into 1-second segments.
-    model.segment = None
+    model = _get_model(bandwidth)
 
     # ── 3. Encode ────────────────────────────────────────────────────────────
     print("[3/7] Encoding (loudness-normalised + DC-filtered)...")
