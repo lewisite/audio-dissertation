@@ -174,10 +174,12 @@ def _check_precomputed(clip_stem: str, codec: str, latency_ms: int) -> dict | No
 
         resid = os.path.join(PROCESSED_DIR, f'{tag}_residual.wav')
         result['residual_url']    = f'/static/audio/processed/{tag}_residual.wav' if os.path.exists(resid) else None
-        result['fig_waveforms']   = _url('waveforms.png')
-        result['fig_spectrograms']= _url('spectrograms.png')
-        result['fig_heatmap']     = _url('heatmap.png')
-        result['fig_stats']       = _url('stats.png')
+        result['fig_waveforms']      = _url('waveforms.png')
+        result['fig_spectrograms']   = _url('spectrograms.png')
+        result['fig_heatmap']        = _url('heatmap.png')
+        result['fig_stats']          = _url('stats.png')
+        result['fig_input_analysis'] = _url('input_analysis.png')
+        result['fig_saliency']       = _url('saliency.png')
 
         # Try to read summary from data/processed/
         summaries = sorted(

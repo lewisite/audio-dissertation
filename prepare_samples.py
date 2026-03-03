@@ -89,12 +89,14 @@ def process_sample(audio_path: str, verbose: bool = True):
                         if verbose:
                             print(f"    Saved {dst_name}")
 
-                _cp('reconstructed.wav',       f'{tag}_reconstructed.wav')
-                _cp('residual.wav',             f'{tag}_residual.wav')
-                _cp('fig_waveforms.png',        f'{tag}_waveforms.png')
-                _cp('fig_spectrograms.png',     f'{tag}_spectrograms.png')
-                _cp('fig_codebook_heatmap.png', f'{tag}_heatmap.png')
-                _cp('fig_codebook_stats.png',   f'{tag}_stats.png')
+                _cp('reconstructed.wav',            f'{tag}_reconstructed.wav')
+                _cp('residual.wav',                  f'{tag}_residual.wav')
+                _cp('fig_waveforms.png',             f'{tag}_waveforms.png')
+                _cp('fig_spectrograms.png',          f'{tag}_spectrograms.png')
+                _cp('fig_codebook_heatmap.png',      f'{tag}_heatmap.png')
+                _cp('fig_codebook_stats.png',        f'{tag}_stats.png')
+                _cp('fig_input_analysis.png',        f'{tag}_input_analysis.png')
+                _cp('fig_saliency_comparison.png',   f'{tag}_saliency.png')
 
             else:  # codec == 'B'
                 from codec_b import run_codec_b
