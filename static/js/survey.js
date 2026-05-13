@@ -252,30 +252,28 @@ function onProcessingComplete(result) {
 
   if (codec === 'A') {
     if (badgeEl) {
-      badgeEl.textContent  = 'You are using: System Alpha - Process Transparency Shown';
+      badgeEl.textContent  = 'You are using: System Alpha - Process Details Shown';
       badgeEl.className    = 'badge px-3 py-1 bg-success';
       badgeEl.style.fontSize = '0.9rem';
     }
     if (noteEl) {
       noteEl.innerHTML =
-        'This condition shows <strong>process transparency</strong> during ' +
-        'compression. It provides information about what changed during ' +
-        'compression, including quality estimates, residual audio, ' +
-        'visualizations, and a plain-language summary. Use that information, ' +
-        'along with what you hear, when rating this system.';
+        'This condition shows <strong>extra process details</strong> about ' +
+        'what happened during compression, including quality estimates, ' +
+        'residual audio, visualizations, and a plain-language summary. Use ' +
+        'that information, along with what you hear, when rating this system.';
     }
   } else {
     if (badgeEl) {
-      badgeEl.textContent  = 'You are using: System Beta - No Process Transparency';
+      badgeEl.textContent  = 'You are using: System Beta - No Process Details Shown';
       badgeEl.className    = 'badge px-3 py-1 bg-secondary';
       badgeEl.style.fontSize = '0.9rem';
     }
     if (noteEl) {
       noteEl.innerHTML =
-        'This condition returns the processed audio without process ' +
-        'transparency information. Use the original and processed clips, ' +
-        'along with the information shown in this session, when rating this ' +
-        'system.';
+        'This condition returns the processed audio without extra process ' +
+        'details. Use the original and processed clips, along with the ' +
+        'information shown in this session, when rating this system.';
     }
   }
 

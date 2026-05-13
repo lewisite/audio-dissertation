@@ -25,9 +25,9 @@
       <div class="card-body py-3 px-4 d-flex align-items-center gap-3 flex-wrap">
         <span class="badge bg-accent fs-6 px-3 py-2">{{ condition.label }}</span>
         <div class="text-muted">
-          <i class="bi bi-clock me-1"></i>Processing Mode:
+          <i class="bi bi-clock me-1"></i>Processing setting:
           <strong>{{ condition.mode }}</strong>
-          &mdash; target processing time {{ condition.latency_ms }} ms
+          &mdash; {{ condition.latency_ms }} ms target
         </div>
         <div class="ms-auto text-muted small">Session {{ step + 1 }} of {{ total_steps }}</div>
       </div>
@@ -56,8 +56,8 @@
       <strong>Your task in this session:</strong>
       <span class="small">
         judge the system currently in front of you. Rate your trust in this
-        system, then rate the fidelity of the processed clip compared with the
-        original. Do not compare this session against other sessions.
+        system, then rate how close the processed clip sounds to the original.
+        Do not compare this session against other sessions.
       </span>
     </div>
 
@@ -165,10 +165,9 @@
           </div>
 
           <p class="mb-2">
-            Your audio was run through a <strong>neural audio codec</strong> — an AI
-            that compresses sound to a fraction of its original size, then attempts to
-            reconstruct it. Think of a very intelligent MP3 encoder that learns the
-            patterns of sound rather than following fixed rules.
+            Your audio was run through an <strong>AI audio compression system</strong>.
+            It makes the audio file much smaller, then rebuilds the sound so you can
+            listen to it again. Think of a smarter version of an MP3 encoder.
           </p>
           <p class="mb-3" id="what-happened-codec-note">
             <!-- Filled by JS depending on codec A or B -->
@@ -256,32 +255,32 @@
       <div id="beta-absence-card" class="card shadow-sm border-0 mb-4 d-none">
         <div class="card-body p-4">
           <h5 class="fw-bold mb-1 text-secondary">
-            <i class="bi bi-lock me-2"></i>No process transparency shown in this condition
+            <i class="bi bi-lock me-2"></i>No process details shown in this condition
           </h5>
           <p class="text-muted small mb-3">
             This condition returns the processed audio without additional
-            process details, visual explanations, residual playback, or summary
-            metrics. Use the original and processed clips above to judge this
-            system as presented.
+            process details, visual explanations, extra playback, or summary
+            scores. Use the original and processed clips above to judge this
+            system as it is shown here.
           </p>
           <div class="row g-2 mb-3">
             <div class="col-sm-6 col-md-4">
-              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Quality score (SNR / distortion)</div>
+              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Technical quality score</div>
             </div>
             <div class="col-sm-6 col-md-4">
-              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Perceptual quality score (MCD / MOS)</div>
+              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Estimated listener quality score</div>
             </div>
             <div class="col-sm-6 col-md-4">
-              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>How much the file was compressed</div>
+              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>How much smaller the file became</div>
             </div>
             <div class="col-sm-6 col-md-4">
-              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Processing time &amp; efficiency</div>
+              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Processing time</div>
             </div>
             <div class="col-sm-6 col-md-4">
               <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>What sounds were discarded</div>
             </div>
             <div class="col-sm-6 col-md-4">
-              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Waveform &amp; spectrogram analysis</div>
+              <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Visual sound comparisons</div>
             </div>
             <div class="col-sm-6 col-md-4">
               <div class="absence-item"><i class="bi bi-dash-circle me-1"></i>Plain-English performance summary</div>
@@ -309,10 +308,10 @@
                     style="font-size:0.75rem">Step 1 of 3 — Decision criteria</span>
             </div>
             <p class="text-muted small mb-3">
-              Before compressing anything, System Alpha analyses your audio to surface the
-              <strong>psychoacoustic reasoning</strong> it applies implicitly — making explicit
-              what the model has learned to do silently. This is the process transparency layer:
-              it shows <em>why</em> the model will prioritise certain sounds over others.
+              Before compressing anything, System Alpha looks at your audio and
+              shows which parts may be easier or harder to preserve. This helps
+              explain why the system may focus on some parts of the sound more
+              than others.
             </p>
 
             <!-- Difficulty badge + prediction -->
@@ -773,16 +772,16 @@
             <p class="text-muted small mb-3">
               Ignoring your feelings about the system itself, how would you rate the
               <strong>sound quality</strong> of the processed clip compared to the original?
-              Rate only the sound quality and fidelity of the processed clip, not
+              Rate only how close the processed clip sounds to the original, not
               the speaker, music, content, or interface. Use the scale below.
             </p>
             <div class="mos-scale d-flex gap-2 flex-wrap">
               {% for v, lbl, desc in [
-                (1,'Bad','Very annoying — major differences'),
-                (2,'Poor','Annoying — noticeable differences'),
-                (3,'Fair','Slightly annoying — some differences'),
-                (4,'Good','Perceptible but not annoying'),
-                (5,'Excellent','Imperceptible — sounds identical')
+                (1,'Bad','Major differences'),
+                (2,'Poor','Noticeable differences'),
+                (3,'Fair','Some differences'),
+                (4,'Good','Small differences'),
+                (5,'Excellent','No noticeable difference')
               ] %}
               <label class="mos-option flex-fill text-center" title="{{ desc }}">
                 <input type="radio" name="mos_rating" value="{{ v }}" class="d-none"
