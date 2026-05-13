@@ -24,8 +24,13 @@
           <p class="mb-1 text-muted small">Your unique completion code:</p>
           <div class="completion-code" id="completion-code">{{ completion_code }}</div>
           <p class="mt-2 mb-0 text-muted small">
-            Please copy this code and submit it to receive your study credit
-            (if applicable).
+            If you are entering a participant drawing or receiving study credit,
+            save this code and submit it through the separate form provided by
+            the researcher.
+          </p>
+          <p class="mt-2 mb-0 text-muted small">
+            Only one drawing entry is permitted per participant. Duplicate
+            entries, repeated completion codes, or invalid codes may be excluded.
           </p>
         </div>
 
@@ -38,21 +43,23 @@
         <div class="text-start border rounded p-3 mb-4 bg-light">
           <h6 class="fw-semibold">Study Debrief</h6>
           <p class="small mb-2">
-            This study investigates whether making the inner workings of a neural
-            audio codec <em>visible and explainable</em> affects how much users
-            trust the system. You experienced two types of systems:
+            This study investigates whether process transparency in a neural
+            audio codec affects how much users trust the system. Each session
+            asked you to rate the system in isolation, based only on what you
+            heard and saw in that session.
           </p>
           <ul class="small mb-2">
-            <li><strong>System Alpha</strong> — showed you detailed information
+            <li><strong>System Alpha</strong> — showed you process information
                 about how it compressed your audio (waveforms, spectrograms,
                 quality metrics, and a plain-language summary).</li>
-            <li><strong>System Beta</strong> — processed the audio silently,
-                without providing any additional information.</li>
+            <li><strong>System Beta</strong> — returned the processed audio
+                without showing those process details.</li>
           </ul>
           <p class="small mb-0">
             Both systems used the same underlying neural compression technology
-            (Meta's EnCodec). Any differences in your trust ratings reflect the
-            effect of <em>explainability</em>, not differences in audio quality.
+            (Meta's EnCodec). Your trust ratings can be interpreted in relation
+            to process transparency, while your audio quality ratings help check
+            whether perceived fidelity stayed comparable.
           </p>
         </div>
 

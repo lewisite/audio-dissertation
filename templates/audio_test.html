@@ -27,7 +27,7 @@
         <div class="text-muted">
           <i class="bi bi-clock me-1"></i>Processing Mode:
           <strong>{{ condition.mode }}</strong>
-          &mdash; target latency {{ condition.latency_ms }} ms
+          &mdash; target processing time {{ condition.latency_ms }} ms
         </div>
         <div class="ms-auto text-muted small">Session {{ step + 1 }} of {{ total_steps }}</div>
       </div>
@@ -49,6 +49,16 @@
         <i class="bi bi-clock"></i>
         <span>~5 minutes for this session</span>
       </div>
+    </div>
+
+    <div class="alert alert-info border-0 mb-3" id="session-task-card" role="status">
+      <i class="bi bi-clipboard-check me-2"></i>
+      <strong>Your task in this session:</strong>
+      <span class="small">
+        judge the system currently in front of you. Rate your trust in this
+        system, then rate the fidelity of the processed clip compared with the
+        original. Do not compare this session against other sessions.
+      </span>
     </div>
 
     <!-- ─── Step 1: Choose audio ──────────────────────────────────────────── -->
@@ -164,33 +174,10 @@
             <!-- Filled by JS depending on codec A or B -->
           </p>
 
-          <!-- Alpha vs Beta side-by-side — always visible, highlights current system -->
-          <div class="row g-2 mt-1">
-            <div class="col-sm-6">
-              <div class="system-compare-col p-3 rounded border text-center small"
-                   id="alpha-compare-col">
-                <div class="fw-semibold mb-1">
-                  <i class="bi bi-eye me-1"></i>System Alpha
-                  <span class="badge bg-success ms-1" style="font-size:0.7rem">Transparent</span>
-                </div>
-                <div style="font-size:0.78rem; color:#555">
-                  Reveals: quality metrics, waveform charts, spectrogram,
-                  AI token map, plain-English summary, discarded audio
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6">
-              <div class="system-compare-col p-3 rounded border text-center small"
-                   id="beta-compare-col">
-                <div class="fw-semibold mb-1">
-                  <i class="bi bi-eye-slash me-1"></i>System Beta
-                  <span class="badge bg-secondary ms-1" style="font-size:0.7rem">Black-Box</span>
-                </div>
-                <div style="font-size:0.78rem; color:#555">
-                  Reveals: nothing — processes silently and returns only the audio
-                </div>
-              </div>
-            </div>
+          <div class="alert alert-light border mb-0 small">
+            <i class="bi bi-bullseye me-1"></i>
+            This session is rated on its own. The study is not asking whether
+            you prefer this clip or whether you prefer one session over another.
           </div>
         </div>
       </div>
@@ -269,12 +256,13 @@
       <div id="beta-absence-card" class="card shadow-sm border-0 mb-4 d-none">
         <div class="card-body p-4">
           <h5 class="fw-bold mb-1 text-secondary">
-            <i class="bi bi-lock me-2"></i>System Beta has not provided any information
+            <i class="bi bi-lock me-2"></i>No process transparency shown in this condition
           </h5>
           <p class="text-muted small mb-3">
-            Unlike System Alpha, this system processed your audio without disclosing
-            anything about how it worked or how well it performed.
-            Here is what it chose <em>not</em> to tell you:
+            This condition returns the processed audio without additional
+            process details, visual explanations, residual playback, or summary
+            metrics. Use the original and processed clips above to judge this
+            system as presented.
           </p>
           <div class="row g-2 mb-3">
             <div class="col-sm-6 col-md-4">
@@ -301,8 +289,8 @@
           </div>
           <div class="alert alert-secondary border-0 py-2 px-3 small mb-0">
             <i class="bi bi-question-circle me-1"></i>
-            You have only your ears to judge whether this system performed well.
-            You have no objective way to verify it. How does this affect your confidence?
+            Use the information available in this session to answer the trust
+            and audio quality questions below.
           </div>
         </div>
       </div>
@@ -737,6 +725,9 @@
             <p class="text-muted small mb-1">
               Based on everything you have just heard and seen, please indicate
               how much you agree with each statement about <strong>{{ condition.label }}</strong>.
+              Trust means how willing you would be to rely on this system to
+              process audio accurately and consistently; it does not mean whether
+              you liked the clip itself.
             </p>
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
               <p class="text-muted small mb-0">
@@ -782,8 +773,8 @@
             <p class="text-muted small mb-3">
               Ignoring your feelings about the system itself, how would you rate the
               <strong>sound quality</strong> of the processed clip compared to the original?
-              Use the scale below &mdash; this is the same scale used by audio engineers
-              worldwide.
+              Rate only the sound quality and fidelity of the processed clip, not
+              the speaker, music, content, or interface. Use the scale below.
             </p>
             <div class="mos-scale d-flex gap-2 flex-wrap">
               {% for v, lbl, desc in [

@@ -246,41 +246,36 @@ function onProcessingComplete(result) {
     clipInput.value = selectedSampleId || (uploadedFile ? uploadedFile.name : '');
   }
 
-  // ── System type badge + Alpha/Beta comparison highlight ───────────────────
+  // ── Current system framing ────────────────────────────────────────────────
   const badgeEl    = document.getElementById('system-type-badge');
-  const alphaCol   = document.getElementById('alpha-compare-col');
-  const betaCol    = document.getElementById('beta-compare-col');
   const noteEl     = document.getElementById('what-happened-codec-note');
 
   if (codec === 'A') {
     if (badgeEl) {
-      badgeEl.textContent  = 'You are using: System Alpha — Transparent';
+      badgeEl.textContent  = 'You are using: System Alpha - Process Transparency Shown';
       badgeEl.className    = 'badge px-3 py-1 bg-success';
       badgeEl.style.fontSize = '0.9rem';
     }
-    if (alphaCol) alphaCol.classList.add('system-compare-active');
-    if (betaCol)  betaCol.classList.add('system-compare-inactive');
     if (noteEl) {
       noteEl.innerHTML =
-        'This is <strong>System Alpha</strong>. It is designed to be fully ' +
-        '<strong>transparent</strong> — it shows you everything: how much ' +
-        'quality was preserved, what sounds were discarded, and a detailed ' +
-        'look inside the AI\'s decision-making. Scroll down to explore.';
+        'This condition shows <strong>process transparency</strong> during ' +
+        'compression. It provides information about what changed during ' +
+        'compression, including quality estimates, residual audio, ' +
+        'visualizations, and a plain-language summary. Use that information, ' +
+        'along with what you hear, when rating this system.';
     }
   } else {
     if (badgeEl) {
-      badgeEl.textContent  = 'You are using: System Beta — Black-Box';
+      badgeEl.textContent  = 'You are using: System Beta - No Process Transparency';
       badgeEl.className    = 'badge px-3 py-1 bg-secondary';
       badgeEl.style.fontSize = '0.9rem';
     }
-    if (alphaCol) alphaCol.classList.add('system-compare-inactive');
-    if (betaCol)  betaCol.classList.add('system-compare-active');
     if (noteEl) {
       noteEl.innerHTML =
-        'This is <strong>System Beta</strong>. It processes audio ' +
-        '<strong>silently</strong> — it gives you no information about what ' +
-        'it did, how well it worked, or what was lost. Listen to the clips ' +
-        'below and form your own impression.';
+        'This condition returns the processed audio without process ' +
+        'transparency information. Use the original and processed clips, ' +
+        'along with the information shown in this session, when rating this ' +
+        'system.';
     }
   }
 

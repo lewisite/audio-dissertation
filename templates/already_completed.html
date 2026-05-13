@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Study Already Completed{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7 col-xl-6">
+
+    <div class="card shadow-sm border-0 text-center">
+      <div class="card-body p-5">
+
+        <div class="mb-4">
+          <div class="success-circle mx-auto mb-3">
+            <i class="bi bi-check-lg"></i>
+          </div>
+          <h2 class="fw-bold">Study Already Completed</h2>
+          <p class="text-muted">
+            This browser has already completed the study. To protect the study
+            data, only one completion is allowed from the same browser.
+          </p>
+        </div>
+
+        {% if completion_code %}
+        <div class="alert alert-light border mb-4">
+          <p class="mb-1 text-muted small">Your completion code:</p>
+          <div class="completion-code" id="completion-code">{{ completion_code }}</div>
+        </div>
+        {% endif %}
+
+        <p class="text-muted small mb-0">
+          Only one drawing entry is permitted per participant. Duplicate entries,
+          repeated completion codes, or invalid codes may be excluded.
+        </p>
+        <p class="text-muted small mt-2 mb-0">
+          If you believe this message is an error, please contact the researcher
+          through the study platform.
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

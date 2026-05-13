@@ -6,8 +6,9 @@ Dissertation: "The Effect of Explainability on End-User Trust in Neural Audio Co
 Participants:
   1. Give consent + demographics
   2. Work through 4 codec conditions in counterbalanced order
-  3. For each condition: listen to audio, view results (Codec A shows explainability;
-     Codec B shows nothing), then complete the 12-item Jian trust scale + MOS rating
+  3. For each condition: listen to audio, view the information available in that
+     session (Codec A shows process transparency; Codec B does not), then complete
+     the 12-item Jian trust scale + MOS rating
   4. Receive completion code
 
 CSV output is compatible with src/analyze_experiment.py.
@@ -31,7 +32,8 @@ from datetime import datetime
 from pathlib import Path
 
 from flask import (Flask, render_template, request, session,
-                   redirect, url_for, jsonify, send_file, send_from_directory)
+                   redirect, url_for, jsonify, send_file, send_from_directory,
+                   make_response)
 from werkzeug.utils import secure_filename
 
 # ── Add src/ to Python path ─────────────────────────────────────────────────
@@ -49,6 +51,11 @@ PROCESSED_DIR   = os.path.join(BASE_DIR, 'static', 'audio', 'processed')
 SAMPLES_DIR     = os.path.join(BASE_DIR, 'static', 'audio', 'samples')
 RAW_DATA_DIR    = os.path.join(BASE_DIR, 'data', 'processed')
 RESPONSES_FILE  = os.path.join(BASE_DIR, 'data', 'experiment_responses.csv')
+COMPLETIONS_FILE = os.path.join(BASE_DIR, 'data', 'experiment_completions.csv')
+SURVEY_VERSION  = 'v2_transparency_clarity'
+COMPLETED_COOKIE = 'codec_survey_completed'
+COMPLETION_CODE_COOKIE = 'codec_survey_completion_code'
+COMPLETION_COOKIE_MAX_AGE = 60 * 60 * 24 * 180
 
 for d in [UPLOAD_FOLDER, PROCESSED_DIR, SAMPLES_DIR, RAW_DATA_DIR]:
     os.makedirs(d, exist_ok=True)
@@ -56,7 +63,8 @@ for d in [UPLOAD_FOLDER, PROCESSED_DIR, SAMPLES_DIR, RAW_DATA_DIR]:
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'flac', 'ogg', 'm4a'}
 
 # ── Experimental design ───────────────────────────────────────────────────────
-# 2 × 2 within-subjects: Codec (A = explainable, B = black-box) × Latency (50 / 150 ms)
+# 2 × 2 within-subjects: Codec (A = process transparency shown,
+# B = no process transparency) × Processing time (50 / 150 ms)
 CONDITIONS = [
     {'id': 0, 'codec': 'A', 'latency_ms': 50,  'label': 'System Alpha', 'mode': 'Fast'},
     {'id': 1, 'codec': 'A', 'latency_ms': 150, 'label': 'System Alpha', 'mode': 'Standard'},
@@ -118,16 +126,44 @@ TRUST_ITEMS = [
 
 # ── CSV helpers ───────────────────────────────────────────────────────────────
 CSV_HEADERS = (
-    ['participant_id', 'condition_order', 'step', 'codec', 'latency_ms',
+    ['survey_version',
+     'participant_id', 'condition_order', 'step', 'codec', 'latency_ms',
      'audio_clip_id', 'mos_rating', 'session_date',
      'age', 'gender', 'audio_background', 'hearing_impairment', 'headphones']
     + [f'trust_q{i}' for i in range(1, 13)]
 )
 
+COMPLETION_HEADERS = [
+    'participant_id', 'completion_code', 'completed_at', 'survey_version',
+    'condition_order', 'completed_conditions'
+]
+
 def _ensure_csv():
     if not os.path.exists(RESPONSES_FILE):
         with open(RESPONSES_FILE, 'w', newline='', encoding='utf-8') as f:
             csv.DictWriter(f, fieldnames=CSV_HEADERS).writeheader()
+        return
+
+    with open(RESPONSES_FILE, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        existing_headers = reader.fieldnames or []
+        if existing_headers == CSV_HEADERS:
+            return
+        rows = list(reader)
+
+    migrated_rows = []
+    for row in rows:
+        migrated = {k: row.get(k, '') for k in CSV_HEADERS}
+        if not migrated.get('survey_version'):
+            migrated['survey_version'] = 'v1_legacy'
+        migrated_rows.append(migrated)
+
+    tmp_path = RESPONSES_FILE + '.tmp'
+    with open(tmp_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+        writer.writeheader()
+        writer.writerows(migrated_rows)
+    os.replace(tmp_path, RESPONSES_FILE)
 
 def _save_response(row: dict):
     _ensure_csv()
@@ -135,6 +171,56 @@ def _save_response(row: dict):
         csv.DictWriter(f, fieldnames=CSV_HEADERS).writerow(
             {k: row.get(k, '') for k in CSV_HEADERS}
         )
+
+def _ensure_completion_csv():
+    if not os.path.exists(COMPLETIONS_FILE):
+        with open(COMPLETIONS_FILE, 'w', newline='', encoding='utf-8') as f:
+            csv.DictWriter(f, fieldnames=COMPLETION_HEADERS).writeheader()
+
+def _completed_condition_count(participant_id: str) -> int:
+    if not os.path.exists(RESPONSES_FILE):
+        return 0
+    with open(RESPONSES_FILE, newline='', encoding='utf-8') as f:
+        rows = [
+            r for r in csv.DictReader(f)
+            if r.get('participant_id') == participant_id
+        ]
+    return len({r.get('step') for r in rows if r.get('step') != ''})
+
+def _log_completion(participant_id: str, completion_code: str):
+    """Record one row per participant who reaches the completed study page."""
+    _ensure_completion_csv()
+
+    with open(COMPLETIONS_FILE, newline='', encoding='utf-8') as f:
+        for row in csv.DictReader(f):
+            if row.get('participant_id') == participant_id:
+                return
+
+    order = session.get('condition_order', [])
+    row = {
+        'participant_id': participant_id,
+        'completion_code': completion_code,
+        'completed_at': datetime.now().isoformat(timespec='seconds'),
+        'survey_version': SURVEY_VERSION,
+        'condition_order': ','.join(str(x) for x in order),
+        'completed_conditions': _completed_condition_count(participant_id),
+    }
+
+    with open(COMPLETIONS_FILE, 'a', newline='', encoding='utf-8') as f:
+        csv.DictWriter(f, fieldnames=COMPLETION_HEADERS).writerow(row)
+
+def _completion_cookie_present() -> bool:
+    return request.cookies.get(COMPLETED_COOKIE) == '1'
+
+def _set_completion_cookies(response, completion_code: str):
+    cookie_args = {
+        'max_age': COMPLETION_COOKIE_MAX_AGE,
+        'httponly': True,
+        'samesite': 'Lax',
+    }
+    response.set_cookie(COMPLETED_COOKIE, '1', **cookie_args)
+    response.set_cookie(COMPLETION_CODE_COOKIE, completion_code, **cookie_args)
+    return response
 
 # ── Background processing jobs ────────────────────────────────────────────────
 _jobs: dict = {}        # job_id -> {status, result}
@@ -223,7 +309,7 @@ def _process_job(job_id: str, audio_path: str, condition: dict):
         # ── Fast path: serve pre-computed results if available ───────────────
         precomp = _check_precomputed(clip_stem, codec, latency_ms)
         if precomp is not None:
-            # Simulate target latency so the UI feels consistent
+            # Simulate target processing time so the UI feels consistent
             elapsed_ms = (time.perf_counter() - t0) * 1000
             if elapsed_ms < latency_ms:
                 time.sleep((latency_ms - elapsed_ms) / 1000)
@@ -335,7 +421,7 @@ def _process_job(job_id: str, audio_path: str, condition: dict):
                 'bandwidth_kbps':      24.0,
             }
 
-        # ── Simulate target latency (pad if codec was faster) ─────────────────
+        # ── Simulate target processing time (pad if codec was faster) ─────────
         elapsed_ms = (time.perf_counter() - t0) * 1000
         if elapsed_ms < latency_ms:
             time.sleep((latency_ms - elapsed_ms) / 1000)
@@ -384,11 +470,16 @@ def _allowed(filename):
 
 @app.route('/')
 def welcome():
+    if _completion_cookie_present():
+        return redirect(url_for('already_completed'))
     return render_template('welcome.html')
 
 
 @app.route('/start', methods=['POST'])
 def start():
+    if _completion_cookie_present():
+        return redirect(url_for('already_completed'))
+
     order_idx      = _get_next_order_index()
     condition_order = CONDITION_ORDERS[order_idx]
     participant_id  = str(uuid.uuid4())[:8].upper()
@@ -399,6 +490,13 @@ def start():
     session['start_time']      = datetime.now().isoformat()
 
     return redirect(url_for('demographics'))
+
+
+@app.route('/already-completed')
+def already_completed():
+    code = request.cookies.get(COMPLETION_CODE_COOKIE, '')
+    return render_template('already_completed.html',
+                           completion_code=code)
 
 
 @app.route('/demographics', methods=['GET', 'POST'])
@@ -523,6 +621,7 @@ def submit_step(step):
     demo = session.get('demographics', {})
 
     _save_response({
+        'survey_version':    SURVEY_VERSION,
         'participant_id':   session['participant_id'],
         'condition_order':  ','.join(str(x) for x in order),
         'step':             step,
@@ -552,8 +651,16 @@ def complete():
         return redirect(url_for('welcome'))
     pid  = session['participant_id']
     code = f'CODEC-{pid}'
-    return render_template('complete.html',
-                           participant_id=pid, completion_code=code)
+    completed_count = _completed_condition_count(pid)
+    if completed_count < len(CONDITIONS):
+        return redirect(url_for('audio_test', step=completed_count))
+    _log_completion(pid, code)
+    response = make_response(render_template(
+        'complete.html',
+        participant_id=pid,
+        completion_code=code
+    ))
+    return _set_completion_cookies(response, code)
 
 
 @app.route('/admin/responses')
@@ -566,6 +673,18 @@ def admin_download():
         return 'No data collected yet.', 404
     return send_file(RESPONSES_FILE, as_attachment=True,
                      download_name='experiment_responses.csv',
+                     mimetype='text/csv')
+
+
+@app.route('/admin/completions')
+def admin_completion_download():
+    """Download participant completion codes for credit/drawing tracking."""
+    key = request.args.get('key', '')
+    if key != os.environ.get('ADMIN_KEY', 'admin2024'):
+        return 'Unauthorized', 401
+    _ensure_completion_csv()
+    return send_file(COMPLETIONS_FILE, as_attachment=True,
+                     download_name='experiment_completions.csv',
                      mimetype='text/csv')
 
 
@@ -601,11 +720,13 @@ def _kill_port(port: int):
 
 if __name__ == '__main__':
     _ensure_csv()
+    _ensure_completion_csv()
     print("\n" + "=" * 60)
     print("  Codec Trust Survey — starting server")
     print("  Local:   http://localhost:5000")
     print("  Network: http://0.0.0.0:5000")
     print("  Admin:   http://localhost:5000/admin/responses?key=admin2024")
+    print("  Done:    http://localhost:5000/admin/completions?key=admin2024")
     print("=" * 60 + "\n")
     port = int(os.environ.get('PORT', 5000))
     _kill_port(port)
