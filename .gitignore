@@ -13,6 +13,9 @@ envs/
 data/uploads/
 data/processed/
 data/experiment_responses.csv
+data/experiment_completions.csv
+data/raffle_entries.csv
+data/eligible_drawing_codes*.csv
 data/order_counts.json
 
 # Figures generated at runtime
