@@ -24,6 +24,24 @@
           <p class="mb-1 text-muted small">Your completion code:</p>
           <div class="completion-code" id="completion-code">{{ completion_code }}</div>
         </div>
+
+        <div class="text-start border rounded p-3 mb-4">
+          <h6 class="fw-semibold">Optional Drawing Entry</h6>
+          <p class="small text-muted mb-3">
+            If you have not already entered the participant drawing, you may
+            enter an email address here. It is stored separately from survey
+            responses.
+          </p>
+          <form method="post" action="{{ url_for('raffle_entry') }}">
+            <input type="hidden" name="completion_code" value="{{ completion_code }}">
+            <label for="raffle-email" class="form-label small fw-semibold">Email address</label>
+            <input type="email" class="form-control mb-2" id="raffle-email"
+                   name="email" autocomplete="email" required>
+            <button type="submit" class="btn btn-accent w-100">
+              <i class="bi bi-ticket-perforated me-1"></i>Enter Drawing
+            </button>
+          </form>
+        </div>
         {% endif %}
 
         <p class="text-muted small mb-0">

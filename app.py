@@ -24,6 +24,7 @@ import sys
 import uuid
 import json
 import csv
+import re
 import time
 import random
 import shutil
@@ -52,6 +53,7 @@ SAMPLES_DIR     = os.path.join(BASE_DIR, 'static', 'audio', 'samples')
 RAW_DATA_DIR    = os.path.join(BASE_DIR, 'data', 'processed')
 RESPONSES_FILE  = os.path.join(BASE_DIR, 'data', 'experiment_responses.csv')
 COMPLETIONS_FILE = os.path.join(BASE_DIR, 'data', 'experiment_completions.csv')
+RAFFLE_FILE = os.path.join(BASE_DIR, 'data', 'raffle_entries.csv')
 SURVEY_VERSION  = 'v2_transparency_clarity'
 COMPLETED_COOKIE = 'codec_survey_completed'
 COMPLETION_CODE_COOKIE = 'codec_survey_completion_code'
@@ -138,6 +140,10 @@ COMPLETION_HEADERS = [
     'condition_order', 'completed_conditions'
 ]
 
+RAFFLE_HEADERS = [
+    'completion_code', 'email', 'entered_at', 'survey_version'
+]
+
 def _ensure_csv():
     if not os.path.exists(RESPONSES_FILE):
         with open(RESPONSES_FILE, 'w', newline='', encoding='utf-8') as f:
@@ -221,6 +227,52 @@ def _set_completion_cookies(response, completion_code: str):
     response.set_cookie(COMPLETED_COOKIE, '1', **cookie_args)
     response.set_cookie(COMPLETION_CODE_COOKIE, completion_code, **cookie_args)
     return response
+
+def _ensure_raffle_csv():
+    if not os.path.exists(RAFFLE_FILE):
+        with open(RAFFLE_FILE, 'w', newline='', encoding='utf-8') as f:
+            csv.DictWriter(f, fieldnames=RAFFLE_HEADERS).writeheader()
+
+def _completion_code_exists(completion_code: str) -> bool:
+    if not os.path.exists(COMPLETIONS_FILE):
+        return False
+    with open(COMPLETIONS_FILE, newline='', encoding='utf-8') as f:
+        return any(
+            row.get('completion_code') == completion_code
+            for row in csv.DictReader(f)
+        )
+
+def _normalize_email(email: str) -> str:
+    return (email or '').strip().lower()
+
+def _valid_email(email: str) -> bool:
+    return bool(re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email or ''))
+
+def _save_raffle_entry(completion_code: str, email: str) -> tuple[bool, str]:
+    _ensure_raffle_csv()
+    email = _normalize_email(email)
+
+    if not completion_code or not _completion_code_exists(completion_code):
+        return False, 'That completion code could not be matched to a completed study.'
+    if not _valid_email(email):
+        return False, 'Please enter a valid email address.'
+
+    with open(RAFFLE_FILE, newline='', encoding='utf-8') as f:
+        for row in csv.DictReader(f):
+            if row.get('completion_code') == completion_code:
+                return False, 'That completion code has already been entered in the drawing.'
+            if _normalize_email(row.get('email', '')) == email:
+                return False, 'That email address has already been entered in the drawing.'
+
+    row = {
+        'completion_code': completion_code,
+        'email': email,
+        'entered_at': datetime.now().isoformat(timespec='seconds'),
+        'survey_version': SURVEY_VERSION,
+    }
+    with open(RAFFLE_FILE, 'a', newline='', encoding='utf-8') as f:
+        csv.DictWriter(f, fieldnames=RAFFLE_HEADERS).writerow(row)
+    return True, 'Your drawing entry has been recorded.'
 
 # ── Background processing jobs ────────────────────────────────────────────────
 _jobs: dict = {}        # job_id -> {status, result}
@@ -663,6 +715,22 @@ def complete():
     return _set_completion_cookies(response, code)
 
 
+@app.route('/raffle-entry', methods=['POST'])
+def raffle_entry():
+    completion_code = (
+        request.form.get('completion_code', '').strip()
+        or request.cookies.get(COMPLETION_CODE_COOKIE, '').strip()
+    )
+    email = request.form.get('email', '')
+    saved, message = _save_raffle_entry(completion_code, email)
+    return render_template(
+        'raffle_entry.html',
+        saved=saved,
+        message=message,
+        completion_code=completion_code
+    )
+
+
 @app.route('/admin/responses')
 def admin_download():
     """Download the CSV of all responses (protect with ADMIN_KEY env var)."""
@@ -685,6 +753,18 @@ def admin_completion_download():
     _ensure_completion_csv()
     return send_file(COMPLETIONS_FILE, as_attachment=True,
                      download_name='experiment_completions.csv',
+                     mimetype='text/csv')
+
+
+@app.route('/admin/raffle')
+def admin_raffle_download():
+    """Download raffle entries. Keep this separate from survey responses."""
+    key = request.args.get('key', '')
+    if key != os.environ.get('ADMIN_KEY', 'admin2024'):
+        return 'Unauthorized', 401
+    _ensure_raffle_csv()
+    return send_file(RAFFLE_FILE, as_attachment=True,
+                     download_name='raffle_entries.csv',
                      mimetype='text/csv')
 
 
@@ -721,12 +801,14 @@ def _kill_port(port: int):
 if __name__ == '__main__':
     _ensure_csv()
     _ensure_completion_csv()
+    _ensure_raffle_csv()
     print("\n" + "=" * 60)
     print("  Codec Trust Survey — starting server")
     print("  Local:   http://localhost:5000")
     print("  Network: http://0.0.0.0:5000")
     print("  Admin:   http://localhost:5000/admin/responses?key=admin2024")
     print("  Done:    http://localhost:5000/admin/completions?key=admin2024")
+    print("  Raffle:  http://localhost:5000/admin/raffle?key=admin2024")
     print("=" * 60 + "\n")
     port = int(os.environ.get('PORT', 5000))
     _kill_port(port)

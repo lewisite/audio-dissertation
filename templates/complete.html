@@ -25,8 +25,7 @@
           <div class="completion-code" id="completion-code">{{ completion_code }}</div>
           <p class="mt-2 mb-0 text-muted small">
             If you are entering a participant drawing or receiving study credit,
-            save this code and submit it through the separate form provided by
-            the researcher.
+            save this code.
           </p>
           <p class="mt-2 mb-0 text-muted small">
             Only one drawing entry is permitted per participant. Duplicate
@@ -38,6 +37,29 @@
         <button class="btn btn-outline-secondary mb-4" onclick="copyCode()">
           <i class="bi bi-clipboard me-1"></i> Copy Code
         </button>
+
+        <!-- Optional raffle entry -->
+        <div class="text-start border rounded p-3 mb-4">
+          <h6 class="fw-semibold">Optional Drawing Entry</h6>
+          <p class="small text-muted mb-3">
+            Enter an email address only if you want to be included in the
+            participant drawing or contacted for study credit. This email is
+            stored separately from your survey responses.
+          </p>
+          <form method="post" action="{{ url_for('raffle_entry') }}">
+            <input type="hidden" name="completion_code" value="{{ completion_code }}">
+            <label for="raffle-email" class="form-label small fw-semibold">Email address</label>
+            <input type="email" class="form-control mb-2" id="raffle-email"
+                   name="email" autocomplete="email" required>
+            <button type="submit" class="btn btn-accent w-100">
+              <i class="bi bi-ticket-perforated me-1"></i>Enter Drawing
+            </button>
+          </form>
+          <p class="small text-muted mt-2 mb-0">
+            Only one drawing entry is permitted per participant. Duplicate
+            entries, repeated completion codes, or invalid codes may be excluded.
+          </p>
+        </div>
 
         <!-- Brief debrief -->
         <div class="text-start border rounded p-3 mb-4 bg-light">
